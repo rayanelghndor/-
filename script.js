@@ -28,6 +28,16 @@ const signDictionary = {
     "هـ": "images/هـ.mp4",
     "و": "images/و.mp4",
     "ي": "images/ي.mp4",
+    "ى": "images/ى.mp4",
+    "ؤ": "images/ؤ.mp4",
+    "لا": "images/لا.mp4",
+    "ال": "images/ال.mp4",
+    "ة": "images/ة.mp4",
+    "آ": "images/آ.mp4",
+    "إ": "images/إ.mp4",
+    "ا": "images/ا.mp4",
+    "ء": "images/ء.mp4",
+    "ئ": "images/ئ.mp4",
     "1": "images/1.png",  
     "2": "images/2.png",
     "3": "images/3.png",
@@ -49,6 +59,7 @@ function convertToSignLanguage() {
     container.innerHTML = ''; // مسح الإشارات السابقة
 
     let missingSigns = []; // لتخزين الحروف المفقودة
+    let videoSequence = []; // لتخزين مسارات مقاطع الفيديو
 
     // ترجمة النص إلى إشارات
     for (let i = 0; i < inputText.length; i++) {
@@ -56,24 +67,40 @@ function convertToSignLanguage() {
         const signMedia = signDictionary[char]; // احصل على مسار الإشارة
 
         if (signMedia) {
-            // تحقق إذا كان الملف هو فيديو (ينتهي بـ .mp4)
-            const signElement = document.createElement(signMedia.endsWith(".mp4") ? 'video' : 'img');
-            signElement.src = signMedia;  // مسار الصورة أو الفيديو للإشارة
-
-            // إذا كان الملف هو فيديو
-            if (signMedia.endsWith(".mp4")) {
-                signElement.controls = true;  // إضافة أزرار التحكم بالفيديو
-                signElement.autoplay = true;  // تشغيل الفيديو تلقائيًا
-                signElement.loop = true;      // تكرار الفيديو بشكل دائم
-            }
-
-            container.appendChild(signElement);  // إضافة الفيديو أو الصورة إلى الحاوية
+            videoSequence.push(signMedia);  // إضافة مسار الفيديو إلى التتابع
         } else {
             missingSigns.push(char); // إضافة الحرف المفقود إلى القائمة
         }
     }
 
-    // عرض إشعار إذا كان هناك حروف غير معروفة
+    // تحقق إذا كان لدينا فيديوهات في التتابع
+    if (videoSequence.length > 0) {
+        const signVideo = document.createElement('video');
+        signVideo.controls = true;
+        signVideo.autoplay = true;
+        signVideo.loop = false;
+        signVideo.style.width = '100%'; // ضبط عرض الفيديو
+        container.appendChild(signVideo);  // إضافة الفيديو إلى الحاوية
+
+        let currentIndex = 0; // بدء الفيديو الأول
+
+        // تعيين المصدر الأول للفيديو
+        signVideo.src = videoSequence[currentIndex];
+
+        // تغيير المصدر إلى الفيديو التالي عند انتهاء الفيديو الحالي
+        signVideo.onended = function() {
+            currentIndex++;  // الانتقال إلى الفيديو التالي
+            if (currentIndex < videoSequence.length) {
+                signVideo.src = videoSequence[currentIndex];  // تعيين مصدر الفيديو التالي
+                signVideo.load();  // تحميل الفيديو الجديد
+                signVideo.play();  // تشغيل الفيديو الجديد
+            }
+        };
+
+        signVideo.load();  // تحميل الفيديو الأول
+    }
+
+    // عرض إشعار إذا كانت هناك حروف غير معروفة
     if (missingSigns.length > 0) {
         const alertMessage = `تم العثور على حروف أو رموز لا تدعمها لغة الإشارة: ${missingSigns.join(", ")}`;
         document.getElementById('missing-signs-alert').textContent = alertMessage;
